@@ -37,3 +37,6 @@ node_modules
 .floobit
 .floo
 .flooignore
+
+### Bower ###
+**/bower_components/
