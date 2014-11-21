@@ -10,35 +10,48 @@ exports.headers = headers = {
   "access-control-max-age": 10, // Seconds.
   'Content-Type': "text/html"
 };
-exports.checkUrl = function(url){
-  urls = fs.readFileSync('../archives/sites.txt', 'utf-8');
-  urls = urls.split('\n');
-  for ( var i = 0; i < urls.length; i++){
-    if (url === urls[i]){
-      return true;
-    }
-  }
-  return false;
-};
 
 exports.serveAssets = function(res, asset, callback) {
   // Write some code here that helps serve up your static files!
   // (Static files are things like html (yours or archived from others...), css, or anything that doesn't change often.)
-  if( asset === 'loading'){
-    callback(fs.readFileSync('./public/loading.html', 'utf-8'));
+
+  // if( asset === 'loading'){
+  //   callback(fs.readFileSync(archive.paths['siteAssets'] + '/loading.html', 'utf-8'));
+  // } else
+   if (asset === '/') {
+    callback(fs.readFileSync(archive.paths['siteAssets'] + '/index.html', 'utf-8'));
+  } else if (asset.indexOf('/') > -1) {
+    var filePath;
+    if (fs.existsSync(archive.paths['archivedSites'] + asset)){
+      filePath = archive.paths['archivedSites'] + asset;
+      callback(fs.readFileSync(filePath, 'utf-8'));
+    }
+    else if (fs.existsSync(archive.paths['siteAssets'] + asset)){
+      filePath = archive.paths['siteAssets'] + asset;
+      callback(fs.readFileSync(filePath, 'utf-8'));
+    } else {
+      console.log('File doesnt exist');
+      callback('assest not found', 404);
+    }
   } else {
-    callback(fs.readFileSync('../archives/sites/' + asset, 'utf-8'));
+    callback(fs.readFileSync(archive.paths['archivedSites'] + asset, 'utf-8'));
   }
 };
 
 exports.sendResponse = function(response, data, statusCode){
-  console.log('HOLY SHIT THIS WORKS');
   statusCode = statusCode || 200;
+  console.log('STATUS CODE:' + statusCode);
   response.writeHead(statusCode, headers);
-  response.end(JSON.stringify(data));
-  console.log(data);
+  response.end(data);
 };
 
+exports.sendRedirect = function(response, url) {
+  console.log('Redirect', url);
+  exports.serveAssets(response, url, function(page) {
+    response.writeHead( 200, headers);
+    response.end(page);
+  });
+};
 
 exports.collectData = function(request, callback){
   var data = "";
